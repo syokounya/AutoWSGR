@@ -361,6 +361,33 @@ class ImageChecker:
                 return result
         return None
 
+    # ── 标注转换 ──
+
+    @staticmethod
+    def annotations_from_result(result: ImageMatchResult) -> list[object]:
+        """将 :class:`ImageMatchResult` 转换为标注列表，用于 debug 截图。
+
+        Returns
+        -------
+        list[Annotation]
+            包含所有匹配到的模板框及结果概览标签。
+        """
+        from .annotation import TextLabel, from_image_match_detail
+
+        anns: list[object] = [
+            TextLabel(
+                x=0.02,
+                y=0.05,
+                text=f"ImageRule: {result.rule_name}  matched={result.matched}",
+                color=(255, 255, 0),
+                font_scale=0.6,
+                thickness=2,
+            )
+        ]
+        for detail in result.all_details:
+            anns.append(from_image_match_detail(detail))
+        return anns
+
     @staticmethod
     def crop(screen: np.ndarray, roi: ROI) -> np.ndarray:
         """使用 ROI 裁切图像（返回副本）。"""

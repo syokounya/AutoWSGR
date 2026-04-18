@@ -107,6 +107,15 @@ class MainPage:
         return PixelChecker.check_signature(screen, Sig.BOOKING.ps).matched
 
     @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成主页面所有相关签名的标注（用于 NavError 截图调试）。"""
+        anns: list[object] = []
+        for sig in (Sig.PAGE, Sig.NEWS, Sig.SIGN, Sig.BOOKING):
+            result = PixelChecker.check_signature(screen, sig.ps, with_details=True)
+            anns.extend(PixelChecker.annotations_from_result(result))
+        return anns
+
+    @staticmethod
     def is_base_page(screen: np.ndarray) -> bool:
         """判断截图是否为主页面基础状态 (不含浮层)。"""
         return PixelChecker.check_signature(screen, Sig.PAGE.ps).matched

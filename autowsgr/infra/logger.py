@@ -361,6 +361,7 @@ def save_image(
     image: np.ndarray,
     tag: str = 'screenshot',
     img_dir: Path | None = None,
+    annotated: np.ndarray | None = None,
 ) -> Path | None:
     """将 RGB ndarray 截图保存到磁盘。
 
@@ -373,11 +374,13 @@ def save_image(
     img_dir:
         目标目录。为 *None* 时使用 :func:`setup_logger` 中设定的全局目录；
         全局目录也为 None 则直接返回 None（不保存）。
+    annotated:
+        可选的带标注版本。若提供，会额外保存为 ``{tag}_annotated_{ts}.png``。
 
     Returns
     -------
     Path | None
-        保存的文件路径，未保存时返回 None。
+        保存的文件路径（原始图），未保存时返回 None。
     """
 
     target_dir = str(img_dir or _image_dir)
@@ -387,17 +390,22 @@ def save_image(
 
     target_dir.mkdir(parents=True, exist_ok=True)
     ts = _time.strftime('%H%M%S') + f'_{int(_time.monotonic() * 1000) % 1000:03d}'
-    filename = f'{tag}_{ts}.png'
-    path = target_dir / filename
 
-    # cv2.imwrite 期望 BGR 排列，而我们统一使用 RGB，写入前需转换
-    bgr = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
-    # 使用 imencode + write_bytes 避免 OpenCV C 层 ANSI 路径导致中文乱码
-    ok, buf = cv2.imencode('.png', bgr)
-    if ok:
-        path.write_bytes(buf.tobytes())
-        logger.debug('截图已保存: {}', path)
-    else:
-        logger.warning('截图保存失败: {}', path)
+    def _write(arr: np.ndarray, name: str) -> Path | None:
+        path = target_dir / name
+        bgr = cv2.cvtColor(arr, cv2.COLOR_RGB2BGR)
+        ok, buf = cv2.imencode('.png', bgr)
+        if ok:
+            path.write_bytes(buf.tobytes())
+            logger.debug('截图已保存: {}', path)
+            return path
         return None
-    return path
+
+    filename = f'{tag}_{ts}.png'
+    saved = _write(image, filename)
+
+    if annotated is not None:
+        ann_name = f'{tag}_annotated_{ts}.png'
+        _write(annotated, ann_name)
+
+    return saved

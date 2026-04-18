@@ -35,13 +35,32 @@ _log = get_logger('ui')
 
 
 class NavigationError(Exception):
-    """页面导航验证失败 - 超时未到达目标页面，或重试耗尽。"""
+    """页面导航验证失败 - 超时未到达目标页面，或重试耗尽。
 
-    def __init__(self, msg: str = '', screen: np.ndarray | None = None) -> None:
+    Parameters
+    ----------
+    msg:
+        错误描述。
+    screen:
+        触发异常时的截图。非 None 时会自动保存。
+    annotations:
+        可选的标注列表，用于在保存的截图上绘制 ROI / 探测点等调试信息。
+    """
+
+    def __init__(
+        self,
+        msg: str = '',
+        screen: np.ndarray | None = None,
+        annotations: list[object] | None = None,
+    ) -> None:
         if screen is not None:
             from autowsgr.infra.logger import save_image
+            from autowsgr.vision.annotation import draw_annotations
 
-            save_image(screen, tag='NavError')
+            annotated = None
+            if annotations:
+                annotated = draw_annotations(screen, annotations)
+            save_image(screen, tag='NavError', annotated=annotated)
         super().__init__(msg)
 
 
@@ -92,10 +111,20 @@ def wait_for_page(
     handle_overlays: bool = True,
     source: str = '',
     target: str = '',
+    annotations: list[object] | None = None,
+    get_annotations: Callable[[np.ndarray], list[object]] | None = None,
 ) -> np.ndarray:
     """反复截图，直到 ``checker`` 返回 ``True``。
 
     内置浮层消除。遇到可消除浮层时立即处理并继续轮询（不计入睡眠延迟）。
+
+    Parameters
+    ----------
+    annotations:
+        可选的预计算标注列表，超时后直接绘制到 NavError 截图上。
+    get_annotations:
+        可选的标注生成函数，接收超时时的截图，返回标注列表。
+        与 *annotations* 同时提供时，*annotations* 优先。
 
     Raises
     ------
@@ -133,7 +162,13 @@ def wait_for_page(
                 f'{attempt} 次截图后仍未到达, 当前: {current or "未知"}'
             )
             _log.error('[UI] {}', msg)
-            raise NavigationError(msg, screen=screen)
+            final_anns = annotations
+            if final_anns is None and get_annotations is not None:
+                try:
+                    final_anns = get_annotations(screen)
+                except Exception:
+                    _log.opt(exception=True).warning('[UI] 标注生成失败')
+            raise NavigationError(msg, screen=screen, annotations=final_anns)
 
         time.sleep(interval)
 
@@ -147,6 +182,8 @@ def wait_leave_page(
     handle_overlays: bool = True,
     source: str = '',
     target: str = '',
+    annotations: list[object] | None = None,
+    get_annotations: Callable[[np.ndarray], list[object]] | None = None,
 ) -> np.ndarray:
     """反复截图，直到 ``checker`` 返回 ``False`` (已离开)。
 
@@ -186,7 +223,13 @@ def wait_leave_page(
                 f'{attempt} 次截图后仍在 {source or "?"}'
             )
             _log.error('[UI] {}', msg)
-            raise NavigationError(msg, screen=screen)
+            final_anns = annotations
+            if final_anns is None and get_annotations is not None:
+                try:
+                    final_anns = get_annotations(screen)
+                except Exception:
+                    _log.opt(exception=True).warning('[UI] 标注生成失败')
+            raise NavigationError(msg, screen=screen, annotations=final_anns)
 
         time.sleep(interval)
 
@@ -204,6 +247,8 @@ def click_and_wait_for_page(
     source: str = '',
     target: str = '',
     config: NavConfig = DEFAULT_NAV_CONFIG,
+    annotations: list[object] | None = None,
+    get_annotations: Callable[[np.ndarray], list[object]] | None = None,
 ) -> np.ndarray:
     """点击 + 等待到达目标页面，内置重试。
 
@@ -222,6 +267,8 @@ def click_and_wait_for_page(
         handle_overlays=config.handle_overlays,
         source=source,
         target=target,
+        annotations=annotations,
+        get_annotations=get_annotations,
     )
 
 
@@ -315,6 +362,8 @@ def click_and_wait_leave_page(
     source: str = '',
     target: str = '',
     config: NavConfig = DEFAULT_NAV_CONFIG,
+    annotations: list[object] | None = None,
+    get_annotations: Callable[[np.ndarray], list[object]] | None = None,
 ) -> np.ndarray:
     """点击 + 等待离开当前页面，内置重试。
 
@@ -351,6 +400,8 @@ def click_and_wait_leave_page(
                 handle_overlays=config.handle_overlays,
                 source=source,
                 target=target,
+                annotations=annotations,
+                get_annotations=get_annotations,
             )
         except NavigationError as e:
             last_err = e
@@ -362,7 +413,15 @@ def click_and_wait_leave_page(
                 target or '?',
             )
 
+    final_anns = annotations
+    if final_anns is None and get_annotations is not None:
+        try:
+            final_anns = get_annotations(ctrl.screenshot())
+        except Exception:
+            _log.opt(exception=True).warning('[UI] 标注生成失败')
+
     raise NavigationError(
         f'离开失败 (已重试 {config.max_retries} 次): {source or "?"} -> {target or "?"}',
         screen=ctrl.screenshot(),
+        annotations=final_anns,
     ) from last_err

@@ -50,6 +50,18 @@ from .pixel import (
 )
 from .roi import ROI
 
+# annotation (debug screenshots)
+from .annotation import (
+    Annotation,
+    ProbePoint,
+    ROIRect,
+    TemplateBox,
+    TextLabel,
+    draw_annotations,
+    from_image_match_detail,
+    from_pixel_detail,
+)
+
 
 __all__ = [
     # matcher (pixel)
@@ -79,4 +91,13 @@ __all__ = [
     # api_dll
     'ApiDll',
     'get_api_dll',
+    # annotation
+    'Annotation',
+    'ProbePoint',
+    'ROIRect',
+    'TemplateBox',
+    'TextLabel',
+    'draw_annotations',
+    'from_pixel_detail',
+    'from_image_match_detail',
 ]

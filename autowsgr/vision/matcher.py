@@ -283,6 +283,36 @@ class PixelChecker:
         _log.debug('[Matcher] identify() → None（共 {} 个签名均未匹配）', len(signatures))
         return None
 
+    # ── 标注转换 ──
+
+    @staticmethod
+    def annotations_from_result(result: PixelMatchResult) -> list[object]:
+        """将 :class:`PixelMatchResult` 转换为标注列表，用于 debug 截图。
+
+        Returns
+        -------
+        list[Annotation]
+            仅当 *result* 包含 ``details`` 时返回非空列表。
+        """
+        from .annotation import TextLabel, from_pixel_detail
+
+        if not result.details:
+            return []
+
+        anns: list[object] = [
+            TextLabel(
+                x=0.02,
+                y=0.05,
+                text=f"Signature: {result.signature_name}  ({result.matched_count}/{result.total_count})",
+                color=(255, 255, 0),
+                font_scale=0.6,
+                thickness=2,
+            )
+        ]
+        for detail in result.details:
+            anns.append(from_pixel_detail(detail))
+        return anns
+
     @staticmethod
     def identify_all(
         screen: np.ndarray,

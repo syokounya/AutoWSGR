@@ -168,6 +168,12 @@ class DecisiveBattlePage:
         """判断截图是否为决战总览页。"""
         return PixelChecker.check_signature(screen, PAGE_SIGNATURE).matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成决战页面签名标注（用于 NavError 截图调试）。"""
+        result = PixelChecker.check_signature(screen, PAGE_SIGNATURE, with_details=True)
+        return PixelChecker.annotations_from_result(result)
+
     # ── 小关进度识别 ──────────────────────────────────────────────────────
 
     @staticmethod
@@ -213,6 +219,7 @@ class DecisiveBattlePage:
             checker=MainPage.is_current_page,
             source=PageName.DECISIVE_BATTLE,
             target=PageName.MAIN,
+            get_annotations=MainPage._get_annotations,
         )
 
     def click_enter_map(self) -> None:
