@@ -193,6 +193,11 @@ class SidebarPage:
             SidebarTarget.INTENSIFY: IntensifyPage.is_current_page,
             SidebarTarget.FRIEND: FriendPage.is_current_page,
         }
+        target_annotations = {
+            SidebarTarget.BUILD: None,
+            SidebarTarget.INTENSIFY: None,
+            SidebarTarget.FRIEND: FriendPage._get_annotations,
+        }
         _log.info('[UI] 侧边栏 → {}', target.value)
 
         if target in _SUBMENU_TARGETS:
@@ -200,6 +205,7 @@ class SidebarPage:
             self._navigate_with_submenu(
                 target,
                 target_checker[target],
+                get_annotations=target_annotations[target],
             )
         else:
             # 单次点击 (好友)
@@ -209,12 +215,14 @@ class SidebarPage:
                 checker=target_checker[target],
                 source=PageName.SIDEBAR,
                 target=target.value,
+                get_annotations=target_annotations[target],
             )
 
     def _navigate_with_submenu(
         self,
         target: SidebarTarget,
         checker,
+        get_annotations: Callable[[np.ndarray], list[object]] | None = None,
     ) -> None:
         """带二级弹出菜单的导航 (建造 / 强化)。
 
@@ -253,6 +261,7 @@ class SidebarPage:
                     handle_overlays=config.handle_overlays,
                     source=PageName.SIDEBAR,
                     target=target.value,
+                    get_annotations=get_annotations,
                 )
                 return
             except NavigationError as e:
@@ -267,6 +276,7 @@ class SidebarPage:
         raise NavigationError(
             f'导航失败 (已重试 {config.max_retries} 次): 侧边栏 → {target.value}',
             screen=self._ctrl.screenshot(),
+            annotations=get_annotations(self._ctrl.screenshot()) if get_annotations else None,
         ) from last_err
 
     def go_to_build(self) -> None:
@@ -302,4 +312,5 @@ class SidebarPage:
             checker=MainPage.is_current_page,
             source=PageName.SIDEBAR,
             target=PageName.MAIN,
+            get_annotations=MainPage._get_annotations,
         )

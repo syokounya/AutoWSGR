@@ -40,16 +40,33 @@ _log = get_logger('ui')
 # ---------------------------------------------------------------------------
 
 _PAGE_REGISTRY: dict[str, Callable[[np.ndarray], bool]] = {}
+_PAGE_ANNOTATIONS: dict[str, Callable[[np.ndarray], list[object]] | None] = {}
 
 
-def register_page(name: str, checker: Callable[[np.ndarray], bool]) -> None:
-    """注册页面识别函数。"""
+def register_page(
+    name: str,
+    checker: Callable[[np.ndarray], bool],
+    *,
+    get_annotations: Callable[[np.ndarray], list[object]] | None = None,
+) -> None:
+    """注册页面识别函数。
+
+    Parameters
+    ----------
+    name:
+        页面名称。
+    checker:
+        页面识别函数，接收截图返回是否匹配。
+    get_annotations:
+        可选的标注生成函数，用于 NavError 截图调试。
+    """
     # Python 3.13+ 中 StrEnum 的 str()/format() 返回 'ClassName.MEMBER' 而非值，
     # 显式提取 .value 确保 key 始终为纯 str，避免日志和比较中出现意外格式。
     key: str = name.value if hasattr(name, 'value') else name
     if key in _PAGE_REGISTRY:
         _log.warning("[UI] 页面 '{}' 已注册，将覆盖", key)
     _PAGE_REGISTRY[key] = checker
+    _PAGE_ANNOTATIONS[key] = get_annotations
     # _log.debug("[UI] 注册页面: {}", key)
 
 
@@ -73,6 +90,35 @@ def get_current_page(screen: np.ndarray) -> str | None:
     else:
         _log.debug('[UI] 当前页面: 无匹配 (共 {} 个注册页面)', len(_PAGE_REGISTRY))
     return None
+
+
+def collect_all_page_annotations(screen: np.ndarray) -> list[object]:
+    """收集所有已注册页面的标注（NavError fallback）。
+
+    遍历所有注册了 ``get_annotations`` 的页面，合并其标注结果。
+    主要用于 ``ops/navigate.py`` 中页面识别完全失败时的 debug 截图。
+
+    Parameters
+    ----------
+    screen:
+        截图 (HxWx3, RGB)。
+
+    Returns
+    -------
+    list[Annotation]
+        合并后的标注列表，可能为空。
+    """
+    anns: list[object] = []
+    for name, getter in _PAGE_ANNOTATIONS.items():
+        if getter is None:
+            continue
+        try:
+            page_anns = getter(screen)
+            if page_anns:
+                anns.extend(page_anns)
+        except Exception:
+            _log.opt(exception=True).trace("[UI] 页面 '{}' 标注生成失败", name)
+    return anns
 
 
 def get_registered_pages() -> list[str]:

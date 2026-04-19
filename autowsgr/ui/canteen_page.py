@@ -132,6 +132,13 @@ class CanteenPage:
         result = PixelChecker.check_signature(screen, PAGE_SIGNATURE)
         return result.matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成食堂页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+
     # ── 回退 ──────────────────────────────────────────────────────────────
 
     def go_back(self) -> None:

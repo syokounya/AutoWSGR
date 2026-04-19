@@ -374,3 +374,26 @@ def from_image_match_detail(detail: object) -> TemplateBox:
         confidence=detail.confidence,
         label=detail.template_name,
     )
+
+
+def annotations_from_pixel_signature(
+    screen: np.ndarray,
+    signature: object,
+) -> list[object]:
+    """从像素签名生成标注列表（便捷函数）。
+
+    Parameters
+    ----------
+    screen:
+        截图 (HxWx3, RGB)。
+    signature:
+        :class:`PixelSignature` 或 :class:`CompositePixelSignature` 实例。
+
+    Returns
+    -------
+    list[Annotation]
+    """
+    from .matcher import PixelChecker
+
+    result = PixelChecker.check_signature(screen, signature, with_details=True)
+    return PixelChecker.annotations_from_result(result)

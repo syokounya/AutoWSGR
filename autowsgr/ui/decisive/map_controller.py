@@ -543,6 +543,7 @@ class DecisiveMapController:
             CLICK_FORMATION,
             BattlePreparationPage.is_current_page,
             config=config,
+            get_annotations=BattlePreparationPage._get_annotations,
         )
 
     def click_sortie(self) -> None:

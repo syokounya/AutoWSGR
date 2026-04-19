@@ -93,6 +93,13 @@ class StartScreenPage:
         """
         return PixelChecker.check_signature(screen, PAGE_SIGNATURE).matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成启动画面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+
     # ── 操作动作 ──────────────────────────────────────────────────────────
 
     def click_enter(self) -> None:

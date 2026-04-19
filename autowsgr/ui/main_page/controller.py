@@ -37,28 +37,30 @@ _log = get_logger('ui')
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _get_target_checker(target: Target) -> Callable[[np.ndarray], bool]:
-    """延迟导入并返回目标页面的 ``is_current_page``。"""
+def _get_target_checker(
+    target: Target,
+) -> tuple[Callable[[np.ndarray], bool], Callable[[np.ndarray], list[object]] | None]:
+    """延迟导入并返回目标页面的 ``is_current_page`` 和 ``_get_annotations``。"""
     if target is Target.SORTIE:
         from autowsgr.ui.map.page import MapPage
 
-        return MapPage.is_current_page
+        return MapPage.is_current_page, None
     if target is Target.TASK:
         from autowsgr.ui.mission_page import MissionPage
 
-        return MissionPage.is_current_page
+        return MissionPage.is_current_page, None
     if target is Target.SIDEBAR:
         from autowsgr.ui.sidebar_page import SidebarPage
 
-        return SidebarPage.is_current_page
+        return SidebarPage.is_current_page, None
     if target is Target.HOME:
         from autowsgr.ui.backyard_page import BackyardPage
 
-        return BackyardPage.is_current_page
+        return BackyardPage.is_current_page, BackyardPage._get_annotations
     if target is Target.EVENT:
         from autowsgr.ui.event.event_page import BaseEventPage
 
-        return BaseEventPage.is_current_page
+        return BaseEventPage.is_current_page, BaseEventPage._get_annotations
     raise ValueError(f'未知的导航目标: {target}')
 
 
@@ -195,13 +197,15 @@ class MainPage:
         from autowsgr.ui.utils import click_and_wait_for_page
 
         coord = NavCoord[target.name]
+        checker, get_anns = _get_target_checker(target)
         _log.info('[UI] 主页面 → {}', target.value)
         click_and_wait_for_page(
             self._ctrl,
             click_coord=coord.xy,
-            checker=_get_target_checker(target),
+            checker=checker,
             source=PageName.MAIN,
             target=target.page_name,
+            get_annotations=get_anns,
         )
 
     # ── 活动导航 (委托 event_nav) ────────────────────────────────────────

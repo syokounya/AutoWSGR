@@ -132,6 +132,13 @@ class BaseBattlePreparation:
         result = PixelChecker.check_signature(screen, PAGE_SIGNATURE)
         return result.matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成出征准备页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+
     # ── 状态查询 — 舰队 / 面板 ────────────────────────────────────────────
 
     @staticmethod

@@ -100,6 +100,7 @@ class MissionPage:
             checker=MainPage.is_current_page,
             source=PageName.MISSION,
             target=PageName.MAIN,
+            get_annotations=MainPage._get_annotations,
         )
 
     # ── 奖励收取 ─────────────────────────────────────────────────────────

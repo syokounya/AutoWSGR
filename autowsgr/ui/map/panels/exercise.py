@@ -252,6 +252,7 @@ class ExercisePanelMixin(BaseMapPage):
             checker=BattlePreparationPage.is_current_page,
             source='演习-对手信息',
             target=PageName.BATTLE_PREP,
+            get_annotations=BattlePreparationPage._get_annotations,
         )
 
     # ═══════════════════════════════════════════════════════════════════════

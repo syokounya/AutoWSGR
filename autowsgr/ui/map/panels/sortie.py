@@ -398,4 +398,5 @@ class SortiePanelMixin(BaseMapPage):
             checker=BattlePreparationPage.is_current_page,
             source=f'地图-出征 {chapter}-{map_num}',
             target=PageName.BATTLE_PREP,
+            get_annotations=BattlePreparationPage._get_annotations,
         )

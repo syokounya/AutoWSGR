@@ -43,4 +43,5 @@ class DecisivePanelMixin(BaseMapPage):
             checker=DecisiveBattlePage.is_current_page,
             source='地图-决战面板',
             target=PageName.DECISIVE_BATTLE,
+            get_annotations=DecisiveBattlePage._get_annotations,
         )

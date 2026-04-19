@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from autowsgr.infra.logger import get_logger
 from autowsgr.ui.navigation import find_path
-from autowsgr.ui.page import get_current_page
+from autowsgr.ui.page import collect_all_page_annotations, get_current_page
 from autowsgr.ui.utils import NavigationError
 
 
@@ -86,9 +86,12 @@ def _goto_page(ctx: GameContext, target: str) -> None:
         # 1. 识别
         current = identify_current_page(ctx)
         if current is None:
+            screen = ctx.ctrl.screenshot()
+            anns = collect_all_page_annotations(screen)
             raise NavigationError(
                 f'无法识别当前页面，导航中止 (目标: {target})',
-                screen=ctx.ctrl.screenshot(),
+                screen=screen,
+                annotations=anns,
             )
 
         # 2. 检查
@@ -99,9 +102,12 @@ def _goto_page(ctx: GameContext, target: str) -> None:
         # 3. 寻路
         path = find_path(current, target)
         if path is None:
+            screen = ctx.ctrl.screenshot()
+            anns = collect_all_page_annotations(screen)
             raise NavigationError(
                 f"无法找到从 '{current}' 到 '{target}' 的路径",
-                screen=ctx.ctrl.screenshot(),
+                screen=screen,
+                annotations=anns,
             )
 
         if not path:  # Should be covered by current == target, but safe check
@@ -120,9 +126,12 @@ def _goto_page(ctx: GameContext, target: str) -> None:
         )
         edge.action(ctx)
 
+    screen = ctx.ctrl.screenshot()
+    anns = collect_all_page_annotations(screen)
     raise NavigationError(
         f'导航步数超限 ({MAX_STEPS})，目标: {target}',
-        screen=ctx.ctrl.screenshot(),
+        screen=screen,
+        annotations=anns,
     )
 
 

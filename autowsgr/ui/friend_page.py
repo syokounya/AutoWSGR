@@ -98,6 +98,13 @@ class FriendPage:
 
         return identify_page_type(screen) == TabbedPageType.FRIEND
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成好友页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+
     # ── 回退 ──────────────────────────────────────────────────────────────
 
     def go_back(self) -> None:

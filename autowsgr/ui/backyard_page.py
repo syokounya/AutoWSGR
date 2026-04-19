@@ -116,6 +116,13 @@ class BackyardPage:
         result = PixelChecker.check_signature(screen, PAGE_SIGNATURE)
         return result.matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成后院页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+
     # ── 导航 ──────────────────────────────────────────────────────────────
 
     def navigate_to(self, target: BackyardTarget) -> None:
@@ -138,6 +145,10 @@ class BackyardPage:
             BackyardTarget.BATH: BathPage.is_current_page,
             BackyardTarget.CANTEEN: CanteenPage.is_current_page,
         }
+        target_annotations = {
+            BackyardTarget.BATH: BathPage._get_annotations,
+            BackyardTarget.CANTEEN: CanteenPage._get_annotations,
+        }
         _log.info('[UI] 后院 → {}', target.value)
         click_and_wait_for_page(
             self._ctrl,
@@ -145,6 +156,7 @@ class BackyardPage:
             checker=target_checker[target],
             source='后院',
             target=target.value,
+            get_annotations=target_annotations[target],
         )
 
     def go_to_bath(self) -> None:
@@ -174,4 +186,5 @@ class BackyardPage:
             checker=MainPage.is_current_page,
             source='后院',
             target=PageName.MAIN,
+            get_annotations=MainPage._get_annotations,
         )

@@ -143,6 +143,13 @@ class ChooseShipPage:
         result = PixelChecker.check_signature(screen, PAGE_SIGNATURE)
         return result.matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成选船页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+
     def _wait_leave_current_page(self, timeout: float = 5.0):
         wait_leave_page(self._ctrl, self.is_current_page, timeout=timeout)
 

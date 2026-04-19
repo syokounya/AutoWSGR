@@ -113,19 +113,43 @@ OverlayType = OverlayKind
 # ── 注册所有页面识别器 ──
 
 
-register_page(PageName.MAIN, MainPage.is_current_page)
+register_page(PageName.MAIN, MainPage.is_current_page, get_annotations=MainPage._get_annotations)
 register_page(PageName.MAP, MapPage.is_current_page)
-register_page(PageName.BATTLE_PREP, BattlePreparationPage.is_current_page)
+register_page(
+    PageName.BATTLE_PREP,
+    BattlePreparationPage.is_current_page,
+    get_annotations=BattlePreparationPage._get_annotations,
+)
 register_page(PageName.SIDEBAR, SidebarPage.is_current_page)
 register_page(PageName.MISSION, MissionPage.is_current_page)
-register_page(PageName.BACKYARD, BackyardPage.is_current_page)
-register_page(PageName.BATH, BathPage.is_current_page)
-register_page(PageName.CANTEEN, CanteenPage.is_current_page)
+register_page(
+    PageName.BACKYARD,
+    BackyardPage.is_current_page,
+    get_annotations=BackyardPage._get_annotations,
+)
+register_page(
+    PageName.BATH, BathPage.is_current_page, get_annotations=BathPage._get_annotations
+)
+register_page(
+    PageName.CANTEEN,
+    CanteenPage.is_current_page,
+    get_annotations=CanteenPage._get_annotations,
+)
 register_page(PageName.BUILD, BuildPage.is_current_page)
 register_page(PageName.INTENSIFY, IntensifyPage.is_current_page)
-register_page(PageName.FRIEND, FriendPage.is_current_page)
-register_page(PageName.DECISIVE_BATTLE, DecisiveBattlePage.is_current_page)
-register_page(PageName.EVENT_MAP, BaseEventPage.is_current_page)
+register_page(
+    PageName.FRIEND, FriendPage.is_current_page, get_annotations=FriendPage._get_annotations
+)
+register_page(
+    PageName.DECISIVE_BATTLE,
+    DecisiveBattlePage.is_current_page,
+    get_annotations=DecisiveBattlePage._get_annotations,
+)
+register_page(
+    PageName.EVENT_MAP,
+    BaseEventPage.is_current_page,
+    get_annotations=BaseEventPage._get_annotations,
+)
 
 __all__ = [
     # ── 数据 ──

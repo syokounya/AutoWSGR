@@ -148,6 +148,15 @@ class BathPage:
         return PixelChecker.check_signature(screen, CHOOSE_REPAIR_OVERLAY_SIGNATURE).matched
 
     @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成浴室页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        anns = annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
+        anns.extend(annotations_from_pixel_signature(screen, CHOOSE_REPAIR_OVERLAY_SIGNATURE))
+        return anns
+
+    @staticmethod
     def has_choose_repair_overlay(screen: np.ndarray) -> bool:
         """判断截图中选择修理 overlay 是否打开。
 

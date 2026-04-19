@@ -170,6 +170,13 @@ class BaseEventPage:
         """判断截图是否为活动地图页面。"""
         return PixelChecker.check_signature(screen, EVENT_MAP_COMPOSITE).matched
 
+    @staticmethod
+    def _get_annotations(screen: np.ndarray) -> list[object]:
+        """生成活动地图页面签名标注（用于 NavError 截图调试）。"""
+        from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+        return annotations_from_pixel_signature(screen, EVENT_MAP_COMPOSITE)
+
     # —— 悬浮窗检测 ─────────────────────────────────────────────────────────
     def _detect_overlay(self, screen: np.ndarray) -> bool:
         """检测截图中是否存在可消除的浮层（地图进入页）。"""
@@ -239,6 +246,7 @@ class BaseEventPage:
             checker=BattlePreparationPage.is_current_page,
             source=PageName.EVENT_MAP,
             target=PageName.BATTLE_PREP,
+            get_annotations=BattlePreparationPage._get_annotations,
         )
 
     # ── 难度切换 ──────────────────────────────────────────────────────────
