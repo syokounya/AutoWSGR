@@ -186,6 +186,35 @@ def _decisive_to_main(ctx: GameContext) -> None:
     DecisiveBattlePage(ctx).go_back()
 
 
+def _decisive_map_to_battle(ctx: GameContext) -> None:
+    """决战地图页 → 决战总览页 (通过「暂离」保存进度后退出)。"""
+    import time
+
+    from autowsgr.ui.decisive.overlay import (
+        CLICK_LEAVE,
+        CLICK_RETREAT_BUTTON,
+        DecisiveOverlay,
+        detect_decisive_overlay,
+    )
+
+    ctrl = ctx.ctrl
+    # 先确保在地图页（关闭可能存在的其他 overlay）
+    ctrl.click(*CLICK_RETREAT_BUTTON)
+    time.sleep(1.0)
+
+    # 等待确认退出 overlay
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline:
+        screen = ctrl.screenshot()
+        if detect_decisive_overlay(screen) == DecisiveOverlay.CONFIRM_EXIT:
+            break
+        time.sleep(0.3)
+
+    # 点击「暂离」保存进度并退出到总览页
+    ctrl.click(*CLICK_LEAVE)
+    time.sleep(2.0)
+
+
 def _main_to_event(ctx: GameContext) -> None:
     from autowsgr.ui.main_page import MainPage
 
@@ -230,6 +259,13 @@ NAV_GRAPH: list[NavEdge] = [
     NavEdge(PageName.FRIEND, PageName.SIDEBAR, _friend_to_sidebar, '好友 → 侧边栏'),
     # ── 决战 → 主页面 (跨级) ──
     NavEdge(PageName.DECISIVE_BATTLE, PageName.MAIN, _decisive_to_main, '决战 → 主页面'),
+    # ── 决战地图页 ↔ 总览页 ──
+    NavEdge(
+        PageName.DECISIVE_MAP,
+        PageName.DECISIVE_BATTLE,
+        _decisive_map_to_battle,
+        '决战地图页 → 决战总览页 (暂离)',
+    ),
     # ── 活动 ↔ 主页面 ──
     NavEdge(PageName.MAIN, PageName.EVENT_MAP, _main_to_event, '主页面 → 活动'),
     NavEdge(PageName.EVENT_MAP, PageName.MAIN, _event_to_main, '活动 → 主页面'),

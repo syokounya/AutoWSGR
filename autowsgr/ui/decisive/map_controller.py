@@ -646,21 +646,40 @@ class DecisiveMapController:
             if confirm_operation(self._ctrl, timeout=0.8):
                 continue
 
+            # 兜底：可能是新船首次获得时的全屏立绘展示页，点击屏幕中心关闭
+            _log.debug('[地图控制器] 尝试点击屏幕中心关闭可能的展示页')
+            self._ctrl.click(0.5, 0.5)
+            time.sleep(0.6)
+
             time.sleep(0.3)
         else:
             _log.warning('[地图控制器] 小关通关后未能确认已回到决战入口页')
 
-        # settle 循环结束后，如果仍未回到入口页，尝试从地图页返回
-        for _ in range(5):
+        # settle 循环结束后，如果仍未回到入口页，先尝试关闭可能的展示页，再从地图页返回
+        for _ in range(3):
             screen = self._ctrl.screenshot()
             if ImageChecker.find_any(screen, entry_templates, confidence=0.8) is not None:
                 _log.info('[地图控制器] 通过返回按钮回到决战入口页')
                 break
-            _log.debug('[地图控制器] 尝试点击返回按钮回到决战入口页')
-            self._ctrl.click(0.03, 0.06)
+            _log.debug('[地图控制器] 尝试点击屏幕中心关闭展示页')
+            self._ctrl.click(0.5, 0.5)
             time.sleep(1.0)
+            screen = self._ctrl.screenshot()
+            if ImageChecker.find_any(screen, entry_templates, confidence=0.8) is not None:
+                _log.info('[地图控制器] 点击屏幕中心后回到决战入口页')
+                break
         else:
-            _log.warning('[地图控制器] 多次尝试后仍未能回到决战入口页')
+            # 兜底点击仍未回到入口页，尝试从地图页返回
+            for _ in range(5):
+                screen = self._ctrl.screenshot()
+                if ImageChecker.find_any(screen, entry_templates, confidence=0.8) is not None:
+                    _log.info('[地图控制器] 通过返回按钮回到决战入口页')
+                    break
+                _log.debug('[地图控制器] 尝试点击返回按钮回到决战入口页')
+                self._ctrl.click(0.03, 0.06)
+                time.sleep(1.0)
+            else:
+                _log.warning('[地图控制器] 多次尝试后仍未能回到决战入口页')
 
         if collected:
             _log.info('[地图控制器] 小关通关共收集 {} 个掉落', len(collected))

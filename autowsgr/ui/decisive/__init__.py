@@ -25,6 +25,7 @@
     └── preparation.py        ← DecisiveBattlePreparationPage (决战换船)
 """
 
+from autowsgr.types import PageName
 from autowsgr.ui.decisive.battle_page import DecisiveBattlePage
 from autowsgr.ui.decisive.map_controller import DecisiveMapController
 from autowsgr.ui.decisive.preparation import DecisiveBattlePreparationPage
@@ -35,3 +36,41 @@ __all__ = [
     'DecisiveBattlePreparationPage',
     'DecisiveMapController',
 ]
+
+
+# ── 页面注册 ────────────────────────────────────────────────────────────
+# 决战地图页 (含 overlay) 注册到页面中心，使 get_current_page / goto_page
+# 能够识别该状态，避免导航失败时无法标注。
+
+from autowsgr.ui.page import register_page
+from autowsgr.ui.decisive.overlay import (
+    detect_decisive_overlay,
+    get_overlay_signature,
+    is_decisive_map_page,
+)
+from autowsgr.vision.annotation import annotations_from_pixel_signature
+
+
+def _is_decisive_map(screen):
+    """识别决战地图页 (含任何 overlay)。"""
+    return is_decisive_map_page(screen) or detect_decisive_overlay(screen) is not None
+
+
+def _get_decisive_map_annotations(screen):
+    """为决战地图页生成标注。
+
+    优先返回命中 overlay 的签名标注；若无 overlay 则返回地图页签名标注。
+    """
+    overlay = detect_decisive_overlay(screen)
+    if overlay is not None:
+        sig = get_overlay_signature(overlay)
+        return annotations_from_pixel_signature(screen, sig)
+    from autowsgr.ui.decisive.overlay import SIG_MAP_PAGE
+    return annotations_from_pixel_signature(screen, SIG_MAP_PAGE)
+
+
+register_page(
+    PageName.DECISIVE_MAP,
+    _is_decisive_map,
+    get_annotations=_get_decisive_map_annotations,
+)

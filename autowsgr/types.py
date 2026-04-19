@@ -425,6 +425,9 @@ class PageName(StrEnum):
     DECISIVE_BATTLE = '决战页面'
     """决战页面"""
 
+    DECISIVE_MAP = '决战地图页'
+    """决战地图页 (含 overlay)"""
+
     EVENT_MAP = '活动页面'
     """活动地图页面"""
 
