@@ -46,7 +46,8 @@ _log = get_logger('ui.decisive')
 
 PAGE_SIGNATURE = PixelSignature(
     name=PageName.DECISIVE_BATTLE,
-    strategy=MatchStrategy.ALL,
+    strategy=MatchStrategy.COUNT,
+    threshold=4,
     rules=[
         PixelRule.of(0.8016, 0.8458, (20, 44, 78), tolerance=30.0),
         PixelRule.of(0.9695, 0.8500, (15, 31, 56), tolerance=30.0),
