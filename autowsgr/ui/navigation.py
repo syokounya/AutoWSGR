@@ -191,6 +191,8 @@ def _decisive_map_to_battle(ctx: GameContext) -> None:
     import time
 
     from autowsgr.ui.decisive.overlay import (
+        CLICK_ADVANCE_CONFIRM,
+        CLICK_FLEET_CLOSE,
         CLICK_LEAVE,
         CLICK_RETREAT_BUTTON,
         DecisiveOverlay,
@@ -198,7 +200,27 @@ def _decisive_map_to_battle(ctx: GameContext) -> None:
     )
 
     ctrl = ctx.ctrl
-    # 先确保在地图页（关闭可能存在的其他 overlay）
+
+    # 先关闭可能存在的 overlay（advance_choice / fleet_acquisition 会遮挡撤退按钮）
+    for _ in range(3):
+        screen = ctrl.screenshot()
+        overlay = detect_decisive_overlay(screen)
+        if overlay is None:
+            break
+        if overlay == DecisiveOverlay.ADVANCE_CHOICE:
+            _log.debug('[导航] 决战地图页: 关闭节点选择 overlay')
+            ctrl.click(*CLICK_ADVANCE_CONFIRM)
+            time.sleep(1.5)
+        elif overlay == DecisiveOverlay.FLEET_ACQUISITION:
+            _log.debug('[导航] 决战地图页: 关闭战备舰队 overlay')
+            ctrl.click(*CLICK_FLEET_CLOSE)
+            time.sleep(1.0)
+        elif overlay == DecisiveOverlay.CONFIRM_EXIT:
+            break
+        else:
+            time.sleep(0.5)
+
+    # 点击撤退按钮触发确认退出 overlay
     ctrl.click(*CLICK_RETREAT_BUTTON)
     time.sleep(1.0)
 

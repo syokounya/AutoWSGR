@@ -127,10 +127,13 @@ class DecisivePhaseHandlers(DecisiveBase):
 
         _log.info('[决战] 入口状态: {}', entry_status.value)
 
-        self._state.stage = self._battle_page.detect_stage(
+        raw_stage = self._battle_page.detect_stage(
             self._ctrl.screenshot(),
             self._config.chapter,
         )
+        # recognize_stage 返回 0-based (0=第1小节, 3=全部通过)，
+        # DecisiveState.stage 期望 1-based (1-3)。
+        self._state.stage = raw_stage + 1 if raw_stage < 3 else 3
         if self._config.chapter == 1:
             self._resume_mode = False
             _log.info(
@@ -409,7 +412,8 @@ class DecisivePhaseHandlers(DecisiveBase):
         _log.info('[决战] 节点 {} 战斗结束, 等待地图加载', self._state.node)
 
         # 先通过逻辑判断小关是否结束
-        if self._logic.is_stage_end():
+        # 防御: stage 尚未识别时跳过，避免 MapData 抛 ValueError
+        if self._state.stage > 0 and self._logic.is_stage_end():
             _log.info(
                 '[决战] 小关 {} 终止节点 {} 已到达',
                 self._state.stage,
