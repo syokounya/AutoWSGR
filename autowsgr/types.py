@@ -385,6 +385,8 @@ class ConditionFlag(StrEnum):
     """当天获取舰船数已达上限"""
     LOOT_MAX = 'loot max'
     """当天获取战利品数已达上限"""
+    NODE_COUNT_MAX = 'node count max'
+    """本次战斗经过节点数已达上限"""
     TARGET_SHIP_DROPPED = 'target ship dropped'
     """掉落了指定目标舰船"""
     FIGHT_END = 'fight end'

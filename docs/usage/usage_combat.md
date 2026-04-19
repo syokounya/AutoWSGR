@@ -371,6 +371,10 @@ class CombatResult:
 | `FIGHT_CONTINUE` | 继续战斗 | 多节点未结束 |
 | `SL` | SL 重来 | 旗舰大破/不满意结果 |
 | `DOCK_FULL` | 船坞已满 | 需要解装 |
+| `SHIP_FULL` | 舰船数已满 | 停止获取新船 |
+| `LOOT_MAX` | 战利品已满 | 停止获取战利品 |
+| `NODE_COUNT_MAX` | 战斗节点数已满 | 停止深入地图 |
+| `TARGET_SHIP_DROPPED` | 目标船掉落 | 获取指定舰船 |
 | `BATTLE_TIMES_EXCEED` | 次数用完 | 战役每日限制 |
 | `SKIP_FIGHT` | 跳过战斗 | 非白名单节点 |
 
