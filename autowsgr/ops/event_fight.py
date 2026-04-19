@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Literal
 
 from autowsgr.combat import CombatMode, CombatPlan, CombatResult
 from autowsgr.combat.engine import run_combat
+from autowsgr.combat.stop_condition import StopConditionEvaluator
 from autowsgr.infra.logger import get_logger
 from autowsgr.ops.navigate import goto_page
 from autowsgr.types import ConditionFlag, PageName, RepairMode, ShipDamageState
@@ -114,6 +115,16 @@ class EventFightRunner:
         self._fleet_ships = None
 
     @staticmethod
+    def _is_stop_flag(flag: ConditionFlag) -> bool:
+        """判断是否为任务级停止标志。"""
+        return flag in {
+            ConditionFlag.DOCK_FULL,
+            ConditionFlag.SHIP_FULL,
+            ConditionFlag.LOOT_MAX,
+            ConditionFlag.TARGET_SHIP_DROPPED,
+        }
+
+    @staticmethod
     def _primary_names_from_rules(fleet_rules: list[Any] | None) -> list[str | None] | None:
         if not fleet_rules:
             return None
@@ -160,6 +171,13 @@ class EventFightRunner:
         # 1. 进入活动地图并选择节点 → 出征准备
         self._enter_fight()
 
+        # 1.5 出征前停止条件检查（预检）
+        evaluator = StopConditionEvaluator(self._plan.stop_condition)
+        pre_flag = evaluator.evaluate_preflight(self._ctx)
+        if pre_flag is not None:
+            _log.info('[OPS] 活动战出征前触发停止条件: {}', pre_flag.value)
+            return CombatResult(flag=pre_flag, fleet=self._fleet_ships)
+
         # 2. 出征准备
         ship_stats = self._prepare_for_battle()
 
@@ -172,6 +190,12 @@ class EventFightRunner:
 
         # 同步战后信息到上下文
         self._ctx.sync_after_combat(self._fleet_id, result)
+
+        # 3.5 战后停止条件检查
+        post_flag = evaluator.evaluate(self._ctx, result.history)
+        if post_flag is not None:
+            _log.info('[OPS] 活动战战后触发停止条件: {}', post_flag.value)
+            result.flag = post_flag
 
         # 4. 处理结果
         self._handle_result(result)
@@ -207,8 +231,8 @@ class EventFightRunner:
             result = self.run()
             self._results.append(result)
 
-            if result.flag == ConditionFlag.DOCK_FULL:
-                _log.warning('[OPS] 船坞已满, 停止')
+            if self._is_stop_flag(result.flag):
+                _log.warning('[OPS] 活动战停止条件触发: {}, 停止', result.flag.value)
                 break
 
             if gap > 0 and i < times - 1:

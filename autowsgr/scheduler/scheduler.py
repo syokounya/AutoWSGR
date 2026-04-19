@@ -236,11 +236,17 @@ class TaskScheduler:
                     result.flag.value if result.flag else 'N/A',
                 )
 
-                # 船坞满则停止当前任务
-                if result.flag == ConditionFlag.DOCK_FULL:
+                # 停止条件触发则停止当前任务
+                if result.flag in {
+                    ConditionFlag.DOCK_FULL,
+                    ConditionFlag.SHIP_FULL,
+                    ConditionFlag.LOOT_MAX,
+                    ConditionFlag.TARGET_SHIP_DROPPED,
+                }:
                     _log.warning(
-                        '[Scheduler] {} 船坞已满, 跳过剩余 {} 次',
+                        '[Scheduler] {} 停止条件触发 ({}), 跳过剩余 {} 次',
                         task.name,
+                        result.flag.value,
                         task.times - task.completed,
                     )
                     break

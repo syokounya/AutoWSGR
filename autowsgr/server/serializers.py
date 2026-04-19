@@ -154,6 +154,17 @@ def build_combat_plan(request: Any) -> Any:
 
     node_args = {k: _build_node_decision(v) for k, v in request.node_args.items()}
 
+    # 停止条件
+    stop_condition = None
+    if request.stop_condition is not None:
+        from autowsgr.combat.stop_condition import StopCondition
+
+        stop_condition = StopCondition(
+            ship_count_ge=request.stop_condition.ship_count_ge,
+            loot_count_ge=request.stop_condition.loot_count_ge,
+            target_ship_dropped=request.stop_condition.target_ship_dropped,
+        )
+
     return CombatPlan(
         name=request.name,
         mode=request.mode,
@@ -166,4 +177,5 @@ def build_combat_plan(request: Any) -> Any:
         selected_nodes=request.selected_nodes,
         default_node=_build_node_decision(request.node_defaults),
         nodes=node_args,
+        stop_condition=stop_condition,
     )

@@ -16,6 +16,7 @@ from typing import Any
 
 from autowsgr.infra import NodeConfig, load_yaml
 from autowsgr.infra.logger import get_logger
+from autowsgr.combat.stop_condition import StopCondition
 from autowsgr.types import FightCondition, Formation, RepairMode
 
 from .rules import RuleEngine
@@ -240,6 +241,8 @@ class CombatPlan:
     selected_nodes: list[str] = field(default_factory=list)
     nodes: dict[str, NodeDecision] = field(default_factory=dict)
     default_node: NodeDecision = field(default_factory=NodeDecision)
+    stop_condition: StopCondition | None = None
+    """战斗停止条件；未配置时不触发阈值停止。"""
     event_name: str | None = None
     """活动名称（如 ``"20260212"``），用于定位活动地图节点数据。
     在 YAML 中写为 ``event: "20260212"``。"""
@@ -314,6 +317,13 @@ class CombatPlan:
 
         event_name: str | None = data.get('event') or None
 
+        # 停止条件
+        stop_cond_data = data.get('stop_condition')
+        stop_condition = (
+            StopCondition(**stop_cond_data)
+            if stop_cond_data else None
+        )
+
         plan = cls(
             name=name or data.get('name', ''),
             mode=mode,
@@ -326,6 +336,7 @@ class CombatPlan:
             selected_nodes=selected_nodes,
             nodes=nodes,
             default_node=default_node,
+            stop_condition=stop_condition,
             event_name=event_name,
         )
 

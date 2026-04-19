@@ -202,10 +202,7 @@ class DailyAutomationConfig(BaseModel):
     """常规战任务列表"""
     quick_repair_limit: int | None = None
     """快修消耗上限"""
-    stop_max_ship: bool = False
-    """获取当天上限 500 船后终止"""
-    stop_max_loot: bool = False
-    """获取当天上限 50 胖次后终止"""
+    # 注: stop_max_ship / stop_max_loot 已移除，请使用 CombatPlan.stop_condition
 
 
 class DecisiveConfig(BaseModel):

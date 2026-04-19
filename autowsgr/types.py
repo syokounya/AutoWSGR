@@ -381,6 +381,12 @@ class ConditionFlag(StrEnum):
 
     DOCK_FULL = 'dock is full'
     """船坞已满且未设置自动解装"""
+    SHIP_FULL = 'ship full'
+    """当天获取舰船数已达上限"""
+    LOOT_MAX = 'loot max'
+    """当天获取战利品数已达上限"""
+    TARGET_SHIP_DROPPED = 'target ship dropped'
+    """掉落了指定目标舰船"""
     FIGHT_END = 'fight end'
     """战斗结束标志"""
     FIGHT_CONTINUE = 'fight continue'

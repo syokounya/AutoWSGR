@@ -178,8 +178,13 @@ class CampaignRunner:
                 _log.info('[OPS] 战役次数已用完')
                 break
 
-            if result.flag == ConditionFlag.DOCK_FULL:
-                _log.warning('[OPS] 船坞已满, 停止战役')
+            if result.flag in {
+                ConditionFlag.DOCK_FULL,
+                ConditionFlag.SHIP_FULL,
+                ConditionFlag.LOOT_MAX,
+                ConditionFlag.TARGET_SHIP_DROPPED,
+            }:
+                _log.warning('[OPS] 战役停止条件触发: {}, 停止战役', result.flag.value)
                 break
 
         _log.info(

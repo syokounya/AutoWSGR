@@ -91,6 +91,22 @@ class NodeDecisionRequest(BaseModel):
     model_config = {'extra': 'forbid'}
 
 
+class StopConditionRequest(BaseModel):
+    """战斗停止条件。"""
+
+    ship_count_ge: int | None = Field(
+        default=None, ge=1, description='舰船获取数达到此值即停',
+    )
+    loot_count_ge: int | None = Field(
+        default=None, ge=1, description='战利品获取数达到此值即停',
+    )
+    target_ship_dropped: list[str] = Field(
+        default_factory=list, description='掉落指定舰船即停',
+    )
+
+    model_config = {'extra': 'forbid'}
+
+
 class FleetRuleRequest(BaseModel):
     """编队槽位候选规则。"""
 
@@ -165,6 +181,10 @@ class CombatPlanRequest(BaseModel):
     node_args: dict[str, NodeDecisionRequest] = Field(
         default_factory=dict,
         description='各节点决策',
+    )
+    stop_condition: StopConditionRequest | None = Field(
+        default=None,
+        description='战斗停止条件',
     )
     event_name: str | None = Field(default=None, description='活动名称')
 
