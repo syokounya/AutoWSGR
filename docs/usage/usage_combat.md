@@ -373,8 +373,19 @@ class CombatResult:
 | `DOCK_FULL` | 船坞已满 | 需要解装 |
 | `SHIP_FULL` | 舰船数已满 | 停止获取新船 |
 | `LOOT_MAX` | 战利品已满 | 停止获取战利品 |
-| `NODE_COUNT_MAX` | 战斗节点数已满 | 停止深入地图 |
 | `TARGET_SHIP_DROPPED` | 目标船掉落 | 获取指定舰船 |
+
+### 节点级 `node_count_ge`
+
+`node_count_ge` 可以写在 `node_args` 的节点决策里，用于指定某个节点达到指定战斗次数后回港。
+
+```yaml
+node_args:
+  K:
+    node_count_ge: 3
+```
+
+该字段仅对节点决策生效，不支持写在全局 `stop_condition` 中。
 | `BATTLE_TIMES_EXCEED` | 次数用完 | 战役每日限制 |
 | `SKIP_FIGHT` | 跳过战斗 | 非白名单节点 |
 

@@ -82,6 +82,11 @@ class NodeDecisionRequest(BaseModel):
         default_factory=lambda: [2, 2, 2, 2, 2, 2],
         description='停止前进条件 (6个位置)',
     )
+    node_count_ge: int | None = Field(
+        default=None,
+        ge=1,
+        description='本节点战斗发生的节点数达到该值时回港',
+    )
     detour: bool = Field(default=False, description='是否迂回')
     enemy_rules: list[list[str]] | None = Field(
         default=None,

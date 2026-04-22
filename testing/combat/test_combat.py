@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 from autowsgr.combat.actions import check_blood
+from autowsgr.combat.handlers import PhaseHandlersMixin
 from autowsgr.combat.history import (
     CombatEvent,
     CombatHistory,
@@ -26,7 +27,7 @@ from autowsgr.combat.state import (
     build_transitions,
     resolve_successors,
 )
-from autowsgr.types import Formation, RepairMode, ShipDamageState
+from autowsgr.types import ConditionFlag, Formation, RepairMode, ShipDamageState
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -344,6 +345,7 @@ class TestNodeDecision:
         assert nd.night is False
         assert nd.proceed is True
         assert nd.proceed_stop == 2
+        assert nd.node_count_ge is None
 
     def test_from_dict(self):
         nd = NodeDecision.from_dict(
@@ -351,11 +353,13 @@ class TestNodeDecision:
                 'formation': 1,
                 'night': True,
                 'proceed': False,
+                'node_count_ge': 3,
             }
         )
         assert nd.formation == Formation.single_column
         assert nd.night is True
         assert nd.proceed is False
+        assert nd.node_count_ge == 3
 
 
 class TestCombatPlan:
@@ -417,6 +421,52 @@ class TestCombatPlan:
         assert decision.enemy_rules is not None
         result = decision.enemy_rules.evaluate({'BB': 3, 'CV': 1})
         assert result.result == RuleResult.RETREAT
+
+
+class TestNodeDecisionProceedBehavior:
+    """NodeDecision.node_count_ge 应在继续前进阶段强制回港。"""
+
+    class DummyHandler(PhaseHandlersMixin):
+        def __init__(self, plan: CombatPlan, decision: NodeDecision) -> None:
+            self._plan = plan
+            self._device = None
+            self._ocr = None
+            self._node = 'A'
+            self._last_action = ''
+            self._ship_stats = [ShipDamageState.NORMAL] * 6
+            self._history = CombatHistory()
+            self._node_count = 0
+            self._formation_by_rule = None
+            self._decision = decision
+
+        def _get_current_decision(self) -> NodeDecision:
+            return self._decision
+
+    def test_node_count_ge_forces_return_to_port(self, monkeypatch):
+        plan = CombatPlan()
+        decision = NodeDecision(proceed=True, proceed_stop=RepairMode.severe_damage, node_count_ge=1)
+        handler = self.DummyHandler(plan, decision)
+        handler._history.add(CombatEvent(EventType.RESULT, node='A', result='S'))
+
+        monkeypatch.setattr('autowsgr.combat.handlers.click_proceed', lambda device, go_forward: None)
+
+        result = handler._handle_proceed()
+
+        assert result == ConditionFlag.FIGHT_END
+        assert handler._node_count == 1
+
+    def test_node_count_ge_not_reached_allows_proceed(self, monkeypatch):
+        plan = CombatPlan()
+        decision = NodeDecision(proceed=True, proceed_stop=RepairMode.severe_damage, node_count_ge=2)
+        handler = self.DummyHandler(plan, decision)
+        handler._history.add(CombatEvent(EventType.RESULT, node='A', result='S'))
+
+        monkeypatch.setattr('autowsgr.combat.handlers.click_proceed', lambda device, go_forward: None)
+
+        result = handler._handle_proceed()
+
+        assert result == ConditionFlag.FIGHT_CONTINUE
+        assert handler._node_count == 1
 
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -75,6 +75,7 @@ class NodeDecision:
     night: bool = False
     proceed: bool = True
     proceed_stop: RepairMode | list[RepairMode] = RepairMode.severe_damage
+    node_count_ge: int | None = None
     enemy_rules: RuleEngine | None = None
     formation_rules: RuleEngine | None = None
     detour: bool = False
@@ -108,6 +109,7 @@ class NodeDecision:
             night=config.night,
             proceed=config.proceed,
             proceed_stop=config.proceed_stop,
+            node_count_ge=config.node_count_ge,
             enemy_rules=enemy_rules,
             formation_rules=formation_rules,
             detour=config.detour,

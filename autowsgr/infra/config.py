@@ -391,6 +391,8 @@ class NodeConfig(BaseModel):
     """是否前进"""
     proceed_stop: RepairMode | list[RepairMode] = RepairMode.severe_damage
     """达到指定破损状态时停止前进"""
+    node_count_ge: int | None = None
+    """本节点战斗发生的节点数 ≥ 此值时回港。"""
 
 
 class FightConfig(BaseModel):

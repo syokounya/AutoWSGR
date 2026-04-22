@@ -181,7 +181,9 @@ class TaskScheduler:
         )
         self._last_expedition_time = time.monotonic()
 
-        for i, task in enumerate(self._tasks):
+        i = 0
+        while i < len(self._tasks):
+            task = self._tasks[i]
             _log.info(
                 '[Scheduler] ── 任务 {}/{}: {} x{} ──',
                 i + 1,
@@ -189,13 +191,29 @@ class TaskScheduler:
                 task.name,
                 task.times,
             )
-            self._run_task(task)
+            stop_flag = self._run_task(task)
+
+            # 目标船掉落触发后从队列移除该任务
+            if stop_flag is ConditionFlag.TARGET_SHIP_DROPPED:
+                self._tasks.pop(i)
+                _log.info(
+                    '[Scheduler] {} 因掉落目标船已从队列移除',
+                    task.name,
+                )
+            else:
+                i += 1
 
         self._print_summary()
         return list(self._tasks)
 
-    def _run_task(self, task: FightTask) -> None:
-        """执行单个任务的全部轮次。"""
+    def _run_task(self, task: FightTask) -> ConditionFlag | None:
+        """执行单个任务的全部轮次。
+
+        Returns
+        -------
+        ConditionFlag | None
+            若因停止条件提前终止，返回该标志；否则返回 ``None``。
+        """
         # 适配返回 list 的 runner
         runner = task.runner
         if not isinstance(runner, FightRunnerProtocol):
@@ -249,9 +267,11 @@ class TaskScheduler:
                         result.flag.value,
                         task.times - task.completed,
                     )
-                    break
+                    return result.flag
         finally:
             self._ctx.active_fight_tasks -= 1
+
+        return None
 
     # ── 远征检查 ──
 

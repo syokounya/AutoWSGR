@@ -36,9 +36,6 @@ class StopCondition:
     loot_count_ge: int | None = None
     """当天获取战利品数 ≥ 此值时停止（上限 50）。"""
 
-    node_count_ge: int | None = None
-    """本次战斗发生战斗的节点数 ≥ 此值时停止。"""
-
     target_ship_dropped: list[str] = field(default_factory=list)
     """掉落列表中任意一艘舰船时停止。"""
 
@@ -91,12 +88,6 @@ class StopConditionEvaluator:
         if cond.loot_count_ge is not None:
             if ctx.dropped_loot_count >= cond.loot_count_ge:
                 return ConditionFlag.LOOT_MAX
-
-        # ── 节点数阈值 ──
-        if cond.node_count_ge is not None and history is not None:
-            fight_count = len(history.get_fight_results_list())
-            if fight_count >= cond.node_count_ge:
-                return ConditionFlag.NODE_COUNT_MAX
 
         # ── 目标船掉落 ──
         if cond.target_ship_dropped and history is not None:

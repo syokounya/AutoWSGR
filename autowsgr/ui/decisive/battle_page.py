@@ -166,7 +166,15 @@ class DecisiveBattlePage:
 
     @staticmethod
     def is_current_page(screen: np.ndarray) -> bool:
-        """判断截图是否为决战总览页。"""
+        """判断截图是否为决战总览页。
+
+        决战页面不是标签页；若当前截图带有标签栏（地图/建造/强化/任务
+        等），直接排除，避免与这些页面误匹配。
+        """
+        from autowsgr.ui.tabbed_page import is_tabbed_page
+
+        if is_tabbed_page(screen):
+            return False
         return PixelChecker.check_signature(screen, PAGE_SIGNATURE).matched
 
     @staticmethod

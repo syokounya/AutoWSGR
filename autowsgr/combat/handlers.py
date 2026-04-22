@@ -442,6 +442,14 @@ class PhaseHandlersMixin:
 
         should_proceed = decision.proceed and check_blood(self._ship_stats, decision.proceed_stop)
 
+        fight_count = len(self._history.get_fight_results_list())
+        if decision.node_count_ge is not None and fight_count >= decision.node_count_ge:
+            _log.info(
+                '[Combat] node_args 中 node_count_ge={} 已达成，当前轮次结束，回港',
+                decision.node_count_ge,
+            )
+            should_proceed = False
+
         _log.info('[Combat] 继续前进决策: {}', '前进' if should_proceed else '回港')
         click_proceed(self._device, go_forward=should_proceed)
         self._last_action = 'yes' if should_proceed else 'no'
