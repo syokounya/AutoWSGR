@@ -23,7 +23,13 @@ from autowsgr.combat.engine import run_combat
 from autowsgr.combat.plan import CombatMode, CombatPlan, NodeDecision
 from autowsgr.infra.logger import get_logger
 from autowsgr.ops.decisive.base import DecisiveBase
-from autowsgr.types import DecisiveEntryStatus, DecisivePhase, FleetSelection, ShipDamageState
+from autowsgr.types import (
+    ConditionFlag,
+    DecisiveEntryStatus,
+    DecisivePhase,
+    FleetSelection,
+    ShipDamageState,
+)
 from autowsgr.ui import RepairStrategy
 from autowsgr.ui.decisive import DecisiveBattlePreparationPage
 
@@ -243,7 +249,12 @@ class DecisivePhaseHandlers(DecisiveBase):
                     self._state.ships.add(name)
 
         if not self._map.close_fleet_overlay():
-            raise RuntimeError('决战关闭战备舰队界面失败')
+            _log.info('[决战] 关闭决战选船界面失败, 选择第一艘后撤退')
+            self._state.phase = DecisivePhase.RETREAT
+            _, first_value = next(iter(selections.items()))
+            self._map.buy_fleet_option(first_value.click_position)
+            if not self._map.close_fleet_overlay():
+                raise RuntimeError('关闭决战选船界面失败')
         self._state.phase = DecisivePhase.PREPARE_COMBAT
 
     def _handle_advance_choice(self) -> None:
@@ -391,7 +402,13 @@ class DecisivePhaseHandlers(DecisiveBase):
             self._state.node,
             self._state.ship_stats,
         )
-        self._state.phase = DecisivePhase.NODE_RESULT
+
+        # 处理战斗结果标志
+        if result.flag == ConditionFlag.DOCK_FULL:
+            _log.warning('[决战] 战斗中检测到船坞已满，转到 DOCK_FULL 阶段处理')
+            self._state.phase = DecisivePhase.DOCK_FULL
+        else:
+            self._state.phase = DecisivePhase.NODE_RESULT
 
     # ── 节点结果 & 通关 ──────────────────────────────────────────────────
 
@@ -458,6 +475,7 @@ class DecisivePhaseHandlers(DecisiveBase):
         _log.info('[决战] 小关 {} 通关!', self._state.stage)
         collected = self._map.confirm_stage_clear()
         self._state.node = 'A'
+        self._resume_mode = True
         if collected:
             _log.info('[决战] 获得 {} 个掉落: {}', len(collected), collected)
 
