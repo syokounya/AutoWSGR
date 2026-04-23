@@ -151,7 +151,9 @@ class ChooseShipPage:
         return annotations_from_pixel_signature(screen, PAGE_SIGNATURE)
 
     def _wait_leave_current_page(self, timeout: float = 5.0):
-        wait_leave_page(self._ctrl, self.is_current_page, timeout=timeout)
+        wait_leave_page(
+            self._ctrl, self.is_current_page, timeout=timeout, source='编队选船', target='编队'
+        )
 
     # ── 操作 ──────────────────────────────────────────────────────────────
     def ensure_search_box(self) -> None:
